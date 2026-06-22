@@ -1,98 +1,71 @@
-# WHOP · MCL Reconciliation Dashboard
+# MCL vs WHOP billing dashboard
 
-Dashboard para operaciones de billing: compara la **Master Client List (MCL)** contra pagos de **WHOP** y señala discrepancias antes de que se conviertan en churn o revenue perdido.
+React dashboard that compares your Master Client List against WHOP payments and surfaces billing mismatches before they become churn.
 
-**Autor:** Bruno Salas Rodriguez
+Mock data ships with the repo so you can click through mismatches without API keys.
 
----
-
-## Qué resuelve
-
-En una agencia con decenas de agentes, la MCL (Google Sheets / Airtable) y WHOP (membresías) se desincronizan fácilmente. Este dashboard responde:
-
-- ¿Quién pagó pero no está en la MCL?
-- ¿Quién está activo en MCL pero no pagó este ciclo?
-- ¿El monto de WHOP coincide con el plan en MCL?
-- ¿Hay clientes inactivos que siguen pagando?
-
----
-
-## Inicio rápido
+## Run it
 
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm run build     # build de producción
-npm run preview   # previsualizar build
+npm run build
+npm run preview
 ```
 
-UI bilingüe: botones **Español / English** en la barra inferior. La preferencia se guarda en `localStorage`.
+Language toggle (ES / EN) in the footer. Preference sticks in `localStorage`.
 
----
+## Reconcile states
 
-## Estados de reconciliación
+| State | Meaning |
+|-------|---------|
+| `matched` | Active client, WHOP id set, amount matches plan |
+| `missing_whop_id` | Active MCL row with no `whopMemberId` |
+| `missing_payment` | Active client, no paid WHOP charge this cycle |
+| `amount_mismatch` | Paid amount ≠ `monthlyUsd` on the MCL row |
+| `orphan_payment` | WHOP payment with no matching MCL `memberId` |
+| `inactive_but_paid` | Paused/churned client with a recent paid charge |
 
-| Estado | Significado | Ejemplo en datos demo |
-|--------|-------------|----------------------|
-| **OK (matched)** | Cliente activo, WHOP ID presente, monto = plan MCL | Maria Torres ($1497 premium) |
-| **Sin WHOP ID** | Fila MCL activa sin `whopMemberId` | Ana Lucía Rivas |
-| **Sin pago** | Cliente activo en MCL, sin pago WHOP en el ciclo | *(ninguno en demo — Carlos sí pagó)* |
-| **Monto** | Pago recibido ≠ `monthlyUsd` del plan | Sofia Herrera ($897 vs $997 esperado) |
-| **Huérfano** | Pago WHOP sin fila MCL con ese `memberId` | unknown.agent@example.com |
-| **Inactivo + pago** | Cliente pausado/churned pero con pago reciente | James Walker (paused) / Patricia Gómez (churned) |
+Only the latest `paid` row per `memberId` counts. `failed` and `refunded` are skipped.
 
-Los pagos `failed` o `refunded` se ignoran; solo cuenta el último pago `paid` por `memberId`.
-
----
-
-## Lógica (resumen)
+## Logic (short version)
 
 ```
-Para cada fila MCL:
-  ├─ Sin whopMemberId → missing_whop_id
-  ├─ Activo sin pago WHOP → missing_payment
-  ├─ Inactivo con pago → inactive_but_paid
-  ├─ Monto distinto → amount_mismatch
-  └─ Todo cuadra → matched
+for each MCL row:
+  no whopMemberId     → missing_whop_id
+  active, no payment  → missing_payment
+  inactive + payment  → inactive_but_paid
+  wrong amount        → amount_mismatch
+  else                → matched
 
-Para cada pago WHOP paid no usado:
-  └─ Sin MCL con ese memberId → orphan_payment
+unused WHOP payments  → orphan_payment
 ```
 
-Implementación en [`src/lib/reconcile.ts`](./src/lib/reconcile.ts). Datos de prueba en [`src/data/mock.ts`](./src/data/mock.ts) — 7 clientes MCL y 8 pagos WHOP con errores intencionales.
+Code: [`src/lib/reconcile.ts`](./src/lib/reconcile.ts)  
+Demo data: [`src/data/mock.ts`](./src/data/mock.ts) — 7 MCL clients, 8 WHOP charges, a few intentional bugs.
 
----
+## UI
 
-## Funciones del dashboard
+- Summary cards: matched count, issue count, MCL size, active MRR
+- Filter: all / issues only / matched only
+- Table with expected vs received and delta
+- CSV export
 
-- **Tarjetas resumen:** coincidencias, problemas, total MCL, MRR activo
-- **Filtros:** todos / solo problemas / solo OK
-- **Tabla:** agente, email, plan, esperado vs recibido, delta, mensaje
-- **Export CSV:** reporte completo para compartir con ops o contabilidad
-
----
-
-## Estructura
+## Layout
 
 ```
 src/
-  data/mock.ts       # MCL + WHOP de demo
-  lib/reconcile.ts   # Motor de reconciliación + CSV
-  i18n.ts            # Strings ES/EN
-  App.tsx            # UI
-  index.css          # Estilos dark dashboard
+  data/mock.ts
+  lib/reconcile.ts
+  i18n.ts
+  App.tsx
 ```
 
----
+## Not done yet
 
-## Próximo paso (producción)
-
-- Conectar API WHOP + export MCL (Sheets/Airtable)
-- Cron diario o webhook post-pago
-- Alertas Slack/email cuando `issues > 0`
-- Deploy en Vercel (`npm run build` → static)
-
----
+- Live WHOP API + MCL import (Sheets/Airtable)
+- Scheduled run or post-payment webhook
+- Slack/email when `issues > 0`
 
 ## Stack
 
@@ -100,6 +73,4 @@ React 19 · TypeScript · Vite
 
 ---
 
-## Relacionado
-
-Encaja con **[agency-onboarding-automation](../agency-onboarding-automation)**: al hacer onboarding se captura `whopMemberId` y se encola reconciliación. Maria Torres (`AGT-20481` / `whop_mem_8f3a21`) aparece en ambos proyectos como caso OK.
+**Español:** Tablero que cruza la Master Client List con pagos de WHOP y marca discrepancias (sin id, sin pago, monto distinto, pagos huérfanos). Datos de prueba incluidos.
