@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "React dashboard: Master Client List vs WHOP billing reconcile",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
