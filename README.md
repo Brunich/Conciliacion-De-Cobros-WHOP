@@ -1,10 +1,12 @@
-# MCL vs WHOP billing dashboard
+# Conciliación de cobros WHOP
 
-React dashboard that compares your Master Client List against WHOP payments and surfaces billing mismatches before they become churn.
+> **In English:** React dashboard that checks the Master Client List against WHOP payments and flags billing mismatches (missing id, missing payment, wrong amount, orphan payments). Mock data included.
 
-Mock data ships with the repo so you can click through mismatches without API keys.
+Tablero en React que cruza la lista maestra de clientes (MCL) con los pagos de WHOP y marca lo que no cuadra antes de que el cliente se vaya.
 
-## Run it
+Trae datos de prueba, así que puedes revisar los casos sin llaves de API.
+
+## Cómo correrlo
 
 ```bash
 npm install
@@ -13,45 +15,45 @@ npm run build
 npm run preview
 ```
 
-Language toggle (ES / EN) in the footer. Preference sticks in `localStorage`.
+El idioma (ES / EN) se cambia en el pie de página y se guarda en `localStorage`.
 
-## Reconcile states
+## Estados
 
-| State | Meaning |
+| Estado | Qué significa |
 |-------|---------|
-| `matched` | Active client, WHOP id set, amount matches plan |
-| `missing_whop_id` | Active MCL row with no `whopMemberId` |
-| `missing_payment` | Active client, no paid WHOP charge this cycle |
-| `amount_mismatch` | Paid amount ≠ `monthlyUsd` on the MCL row |
-| `orphan_payment` | WHOP payment with no matching MCL `memberId` |
-| `inactive_but_paid` | Paused/churned client with a recent paid charge |
+| `matched` | Cliente activo, con id de WHOP y el monto coincide con su plan |
+| `missing_whop_id` | Fila activa de la MCL sin `whopMemberId` |
+| `missing_payment` | Cliente activo sin cobro pagado en este ciclo |
+| `amount_mismatch` | Lo pagado ≠ `monthlyUsd` de su fila en la MCL |
+| `orphan_payment` | Pago de WHOP sin un `memberId` que coincida en la MCL |
+| `inactive_but_paid` | Cliente en pausa o dado de baja con un cobro reciente |
 
-Only the latest `paid` row per `memberId` counts. `failed` and `refunded` are skipped.
+Solo cuenta el último pago `paid` de cada `memberId`. Los `failed` y `refunded` se ignoran.
 
-## Logic (short version)
+## La lógica, corta
 
 ```
-for each MCL row:
-  no whopMemberId     → missing_whop_id
-  active, no payment  → missing_payment
-  inactive + payment  → inactive_but_paid
-  wrong amount        → amount_mismatch
-  else                → matched
+por cada fila de la MCL:
+  sin whopMemberId      → missing_whop_id
+  activo, sin pago      → missing_payment
+  inactivo + pago       → inactive_but_paid
+  monto distinto        → amount_mismatch
+  si no                 → matched
 
-unused WHOP payments  → orphan_payment
+pagos de WHOP sin usar  → orphan_payment
 ```
 
-Code: [`src/lib/reconcile.ts`](./src/lib/reconcile.ts)  
-Demo data: [`src/data/mock.ts`](./src/data/mock.ts) — 7 MCL clients, 8 WHOP charges, a few intentional bugs.
+Código: [`src/lib/reconcile.ts`](./src/lib/reconcile.ts)  
+Datos de prueba: [`src/data/mock.ts`](./src/data/mock.ts), con 7 clientes, 8 cobros y algunos errores puestos a propósito.
 
-## UI
+## Interfaz
 
-- Summary cards: matched count, issue count, MCL size, active MRR
-- Filter: all / issues only / matched only
-- Table with expected vs received and delta
-- CSV export
+- Tarjetas de resumen: cuántos cuadran, cuántos tienen problema, tamaño de la MCL y MRR activo
+- Filtro: todos / solo problemas / solo los que cuadran
+- Tabla con lo esperado contra lo recibido y la diferencia
+- Exportar a CSV
 
-## Layout
+## Estructura
 
 ```
 src/
@@ -61,16 +63,12 @@ src/
   App.tsx
 ```
 
-## Not done yet
+## Falta
 
-- Live WHOP API + MCL import (Sheets/Airtable)
-- Scheduled run or post-payment webhook
-- Slack/email when `issues > 0`
+- Conectar la API de WHOP y leer la MCL desde Sheets o Airtable
+- Correrlo solo cada cierto tiempo o con un webhook después de cada pago
+- Avisar por Slack o correo cuando haya problemas
 
 ## Stack
 
 React 19 · TypeScript · Vite
-
----
-
-**Español:** Tablero que cruza la Master Client List con pagos de WHOP y marca discrepancias (sin id, sin pago, monto distinto, pagos huérfanos). Datos de prueba incluidos.
