@@ -72,3 +72,7 @@ src/
 ## Stack
 
 React 19 · TypeScript · Vite
+
+## Licencia
+
+[MIT](LICENSE). Úsalo, cámbialo y compártelo; sólo conserva el aviso de copyright.
