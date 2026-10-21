@@ -1,8 +1,10 @@
 # Conciliación de cobros WHOP
 
+**Detecta qué clientes pagan de menos, de más o no pagan, comparando tu lista de clientes con los cobros de WHOP.**
+
 > **In English:** React dashboard that checks the Master Client List against WHOP payments and flags billing mismatches (missing id, missing payment, wrong amount, orphan payments). Mock data included.
 
-Tablero en React que cruza la lista maestra de clientes (MCL) con los pagos de WHOP y marca lo que no cuadra antes de que el cliente se vaya.
+[WHOP](https://whop.com) es la plataforma donde se cobran las membresías; la MCL (Master Client List) es la lista maestra de clientes con lo que cada uno debería pagar al mes. Este tablero en React cruza las dos y marca lo que no cuadra antes de que el cliente se vaya: un cliente sin id de WHOP, un cobro que no llegó, un monto distinto al de su plan o un pago que no pertenece a nadie de la lista.
 
 Trae datos de prueba, así que puedes revisar los casos sin llaves de API.
 
@@ -48,7 +50,7 @@ Datos de prueba: [`src/data/mock.ts`](./src/data/mock.ts), con 7 clientes, 8 cob
 
 ## Interfaz
 
-- Tarjetas de resumen: cuántos cuadran, cuántos tienen problema, tamaño de la MCL y MRR activo
+- Tarjetas de resumen: cuántos cuadran, cuántos tienen problema, tamaño de la MCL y MRR activo (ingreso mensual recurrente)
 - Filtro: todos / solo problemas / solo los que cuadran
 - Tabla con lo esperado contra lo recibido y la diferencia
 - Exportar a CSV
